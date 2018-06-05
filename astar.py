@@ -47,20 +47,22 @@ def dijkstras(graph, initial, destination):
     current_node = initial
 
     while current_node is not destination:
-        print(" -- {} --".format(current_node))
         # find tentative distances for neighbors
+        # distance actually could be more abstract "cost" function
+        # for now we just use cartesian distance
         for n in current_node.neighbors:
             d = math.sqrt((n.pos[0]-current_node.pos[0])**2 + (n.pos[1]-current_node.pos[1])**2)
             tentative_distance = current_node.distance + d
             if tentative_distance < n.distance:
                 n.distance = tentative_distance
                 n.previous = current_node
-                print("{} -> {}".format(n, tentative_distance))
 
         # remove current node
+        current_node.visited = True
         unvisited.remove(current_node)
         if unvisited:
             # choose next node
+            # TODO: use priority que for speed instead of searching
             next_node = None
             closest_distance = 1e100
             for node in unvisited:
@@ -90,28 +92,59 @@ def astar(graph, initial, destination):
 
 
 
+def plot_path(graph, path):
+    visited = [node for node in graph.nodes if node.visited]
+    unvisited = [node for node in graph.nodes if not node.visited]
+
+    x = [node.pos[0] for node in visited]
+    y = [node.pos[1] for node in visited]
+    plt.scatter(x,y)
+
+    dist, nodes = path
+    # color destination
+    dest = nodes[-1].pos
+    plt.scatter([dest[0]], [dest[1]], color='green')
+    
+    px = [node.pos[0] for node in nodes]
+    py = [node.pos[1] for node in nodes]
+    plt.plot(px,py, color='green')
+
+    plt.show()
+
+
+
+
 def main():
-    x_range = 10
-    y_range = 10
+    x_range = 40
+    y_range = 40
 
     x = np.arange(0, x_range)
     y = np.arange(0, y_range)
 
     node_positions = list(product(x, y))
 
+    # make some obstacles
+    obstacles = [
+        (4,3), (4,4), (4,5), (5,4), (5,5), (5,3),
+        (15,10), (15,11), (15,12), (16, 10), (16, 11), (16,12),
+        ]
+    for obst in obstacles:
+        node_positions.remove(obst)
+
     graph = Graph()
     for n in node_positions:
         graph.add_point(n)
 
     initial = graph.nodes[0]
-    destination = graph.nodes[-1]
+    destination = graph.nodes[-5]
 
-    print(dijkstras(graph, initial=initial, destination=destination))
+    path = (dijkstras(graph, initial=initial, destination=destination))
 
-    #x = [node.pos[0] for node in graph.nodes]
-    #y = [node.pos[1] for node in graph.nodes]
-    #plt.scatter(x,y)
-    #plt.show()
+    print(path)
+
+    plot_path(graph, path)
+
+    
 
 if __name__ == '__main__':
     main()
